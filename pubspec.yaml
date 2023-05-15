@@ -1,6 +1,6 @@
 name: fixer
-description: A sample command-line application.
-version: 1.0.0
+description: A framework to make large analysis options migrations easier
+version: 0.1.0
 
 environment:
   sdk: ^3.0.0
@@ -8,7 +8,6 @@ environment:
 dependencies:
   collection: ^1.17.2
   parselyzer: ^0.1.0
-  path: ^1.8.3
 
 dev_dependencies:
   rexios_lints: ^5.0.0

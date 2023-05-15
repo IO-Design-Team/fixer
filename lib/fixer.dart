@@ -2,24 +2,18 @@ import 'dart:io';
 
 import 'package:collection/collection.dart';
 import 'package:parselyzer/parselyzer.dart';
-import 'package:path/path.dart';
 
-typedef Fixer = String Function(AnalyzerDiagnostic diagnostic, String content);
-typedef LineFixer = String Function(String line);
+/// A function that fixes an analysis issue on a line
+typedef Fixer = String Function(AnalyzerDiagnostic diagnostic, String line);
 
-Fixer fixLine(LineFixer fixer) => (diagnostic, content) {
-      final lines = content.split('\n');
-      final lineNumber = diagnostic.location.range.start.line - 1;
-      lines[lineNumber] = fixer(lines[lineNumber]);
-      return lines.join('\n');
-    };
-
+/// Fix all files in the current directory or [workingDirectory] if provided
+///
+/// [fixers] is a map of [Fixer]s keyed by the lint code they fix
 void fix(Map<String, Fixer> fixers, {String? workingDirectory}) {
   if (workingDirectory != null) {
     Directory.current = workingDirectory;
   }
 
-  print('Analyzing...');
   final result = Process.runSync('dart', ['analyze', '--format=json']);
   final analysis = AnalyzerResult.fromConsole(result.stdout as String);
 
@@ -32,21 +26,23 @@ void fix(Map<String, Fixer> fixers, {String? workingDirectory}) {
 
   for (final entry in diagnosticsByFile.entries) {
     final file = File(entry.key);
-    final relativeFilePath = relative(file.path);
-    final diagnostics = entry.value;
+    final diagnosticsByLine = {
+      for (final diagnostic in entry.value)
+        diagnostic.location.range.start.line: diagnostic
+    };
 
     // Don't read the file if there are no diagnostics
-    if (diagnostics.isEmpty) continue;
+    if (diagnosticsByLine.isEmpty) continue;
 
-    var content = file.readAsStringSync();
-    for (final diagnostic in diagnostics) {
+    final content = file.readAsLinesSync().mapIndexed((index, line) {
+      final diagnostic = diagnosticsByLine[index + 1];
+      if (diagnostic == null) return line;
+
       final fixer = fixers[diagnostic.code];
-      if (fixer == null) continue;
-      content = fixer(diagnostic, content);
-      print(
-        'Fixed ${diagnostic.code} in $relativeFilePath on line ${diagnostic.location.range.start.line}',
-      );
-    }
+      if (fixer == null) return line;
+
+      return fixer(diagnostic, line);
+    }).join('\n');
 
     file.writeAsStringSync(content);
   }
