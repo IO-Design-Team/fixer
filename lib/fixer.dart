@@ -2,10 +2,10 @@ import 'dart:io';
 
 import 'package:collection/collection.dart';
 import 'package:parselyzer/parselyzer.dart';
+import 'package:path/path.dart';
 
 typedef Fixer = String Function(AnalyzerDiagnostic diagnostic, String content);
 typedef LineFixer = String Function(String line);
-typedef RangeFixer = String Function(String range);
 
 Fixer fixLine(LineFixer fixer) => (diagnostic, content) {
       final lines = content.split('\n');
@@ -14,18 +14,12 @@ Fixer fixLine(LineFixer fixer) => (diagnostic, content) {
       return lines.join('\n');
     };
 
-Fixer fixRange(RangeFixer fixer) => (diagnostic, content) {
-      final start = diagnostic.location.range.start.offset;
-      final end = diagnostic.location.range.end.offset;
+void fix(Map<String, Fixer> fixers, {String? workingDirectory}) {
+  if (workingDirectory != null) {
+    Directory.current = workingDirectory;
+  }
 
-      return content.replaceRange(
-        start,
-        end,
-        fixer(content.substring(start, end)),
-      );
-    };
-
-void fix(Map<String, Fixer> fixers) {
+  print('Analyzing...');
   final result = Process.runSync('dart', ['analyze', '--format=json']);
   final analysis = AnalyzerResult.fromConsole(result.stdout as String);
 
@@ -38,13 +32,20 @@ void fix(Map<String, Fixer> fixers) {
 
   for (final entry in diagnosticsByFile.entries) {
     final file = File(entry.key);
+    final relativeFilePath = relative(file.path);
     final diagnostics = entry.value;
+
+    // Don't read the file if there are no diagnostics
+    if (diagnostics.isEmpty) continue;
 
     var content = file.readAsStringSync();
     for (final diagnostic in diagnostics) {
       final fixer = fixers[diagnostic.code];
       if (fixer == null) continue;
       content = fixer(diagnostic, content);
+      print(
+        'Fixed ${diagnostic.code} in $relativeFilePath on line ${diagnostic.location.range.start.line}',
+      );
     }
 
     file.writeAsStringSync(content);
