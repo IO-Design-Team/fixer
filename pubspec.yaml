@@ -1,6 +1,7 @@
 name: fixer
 description: A framework to make large analysis options migrations easier
 version: 0.1.0
+homepage: https://github.com/IO-Design-Team/fixer
 
 environment:
   sdk: ^3.0.0
