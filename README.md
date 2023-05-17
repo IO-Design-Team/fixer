@@ -21,4 +21,4 @@ void main() {
 
 ```
 
-This example adds placeholder doc comments to all public members. This would be useful if you just enabled the `public_member_api_docs` in a large project with minimal existing documentation.
+This example adds placeholder doc comments to all public members. This would be useful if you just enabled the `public_member_api_docs` analysis option in a large project with minimal existing documentation.
