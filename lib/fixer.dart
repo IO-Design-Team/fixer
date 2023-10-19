@@ -28,7 +28,7 @@ void fix(Map<String, Fixer> fixers, {String? workingDirectory}) {
     final file = File(entry.key);
     final diagnosticsByLine = {
       for (final diagnostic in entry.value)
-        diagnostic.location.range.start.line: diagnostic
+        diagnostic.location.range.start.line: diagnostic,
     };
 
     // Don't read the file if there are no diagnostics
