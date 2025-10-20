@@ -1,6 +1,6 @@
 name: fixer
 description: A framework to make large analysis options migrations easier
-version: 0.1.0
+version: 0.1.1
 homepage: https://github.com/IO-Design-Team/fixer
 
 environment:
@@ -11,5 +11,5 @@ dependencies:
   parselyzer: ^0.1.0
 
 dev_dependencies:
-  rexios_lints: ^6.0.1
+  rexios_lints: ^15.0.0
   test: ^1.21.0
